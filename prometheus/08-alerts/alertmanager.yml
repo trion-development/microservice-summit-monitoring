@@ -1,0 +1,32 @@
+global:
+  smtp_smarthost: 'mailhog:1025'
+  smtp_from: 'alertmanger@sample.com'
+  smtp_require_tls: false
+
+inhibit_rules:
+  - target_matchers:
+      - alertname = InstanceDown
+    source_matchers:
+      - alertname = InternetDown
+    equal: [stage]
+
+receivers:
+  - name: 'all-teams'
+    email_configs:
+      - to: 'everyone@example-company.com, hero@example.com'
+        send_resolved: true
+  - name: 'boss'
+    email_configs:
+      - to: 'boss@example.com'
+        send_resolved: true
+
+route:
+  receiver: 'all-teams'
+  group_by: ['alertname', 'cluster']
+  group_wait: 15s
+  group_interval: 1m
+  routes:
+    - receiver: 'boss'
+      repeat_interval: 1m
+      matchers:
+        - alertname = InternetDown
